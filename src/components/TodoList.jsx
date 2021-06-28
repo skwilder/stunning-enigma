@@ -51,9 +51,35 @@ function createTodoStore() {
     const self = observable({
         items: [{
             id: uuid(),
-            name: "Sample item",
-			status: 'new'
-        }],
+            name: "Complete CSS for TODOList application",
+			status: 'new',
+			tags: ["Styling"]
+        },{
+			id: uuid(),
+			name: "Add Tag Functionality into workflow",
+			status: 'new',
+			tags: ["Component"]
+		},{
+			id: uuid(),
+			name: "Add to readme areas to improve",
+			status: 'started',
+			tags: ["Clean Up"]
+		},{
+			id: uuid(),
+			name: "Ensure git commits are accurate!",
+			status: 'started',
+			tags: ["Clean Up"]
+		},{
+			id: uuid(),
+			name: "Download and install application",
+			status: 'completed',
+			tags: ["Admin"]
+		},{
+			id: uuid(),
+			name: "Complete deletion functionality",
+			status: 'completed',
+			tags: ["Component"]
+		}],
 
         get workingItems() {
             return self.items.filter(i =>  i.status !== 'completed');
