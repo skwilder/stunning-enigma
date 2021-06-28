@@ -24,6 +24,7 @@ function TodoList({ className }) {
                             isComplete={item.isComplete}
                             onComplete={() => store.setCompleted(item.id)}
                             onChange={(e) => store.setItemName(item.id, e.target.value)}
+                            onDelete={() => store.deleteItem(item.id)}
                         />
                     ))}
                 </ul>
@@ -74,6 +75,10 @@ function createTodoStore() {
             const item = self.items.find(i => i.id === id);
             item.isComplete = true;
         },
+		deleteItem(id) {
+        	const itemIndex = self.items.findIndex(i => i.id === id);
+        	self.items.splice(itemIndex,1);
+		},
     })
 
     return self;
