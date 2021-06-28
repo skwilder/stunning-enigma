@@ -10,11 +10,14 @@ import TodoListItem from './TodoListItem'
 function TodoList({ className }) {
     const [ store ] = useState(createTodoStore);
 
-    return (
+	return (
         <div className={className}>
             <header>
                 <h1 className="title">TODO List Example</h1>
             </header>
+			<section>
+				<input onKeyUp={(e) => store.processCreationInput(e.target.value, e)}/>
+			</section>
             <section>
                 <ul>
                     {store.workingItems.map(item => (
@@ -24,7 +27,6 @@ function TodoList({ className }) {
                             isComplete={item.isComplete}
                             onComplete={() => store.setCompleted(item.id)}
 							onProgressUpdate={() => store.setTaskStatus(item.id, 'started')}
-                            onChange={(e) => store.setItemName(item.id, e.target.value)}
                             onDelete={() => store.deleteItem(item.id)}
                         />
                     ))}
@@ -53,30 +55,28 @@ function createTodoStore() {
             id: uuid(),
             name: "Complete CSS for TODOList application",
 			status: 'new',
-			tags: ["Styling"]
         },{
 			id: uuid(),
 			name: "Add Tag Functionality into workflow",
-			status: 'new',
-			tags: ["Component"]
+			status: 'new'
 		},{
 			id: uuid(),
-			name: "Add to readme areas to improve",
+			name: "Add to readme areas to improve #Clean-Up #Styling",
 			status: 'started',
-			tags: ["Clean Up"]
+			tags: ["Clean-Up", "Styling"]
 		},{
 			id: uuid(),
-			name: "Ensure git commits are accurate!",
+			name: "Ensure git commits are accurate! #Clean-up",
 			status: 'started',
-			tags: ["Clean Up"]
+			tags: ["Clean-up"]
 		},{
 			id: uuid(),
-			name: "Download and install application",
+			name: "Download and install application #Admin",
 			status: 'completed',
 			tags: ["Admin"]
 		},{
 			id: uuid(),
-			name: "Complete deletion functionality",
+			name: "Complete deletion functionality #Component",
 			status: 'completed',
 			tags: ["Component"]
 		}],
@@ -89,13 +89,24 @@ function createTodoStore() {
             return self.items.filter(i => i.status === 'completed');
         },
 
-        addItem() {
+		processCreationInput(userInput, keyEvent) {
+        	if (keyEvent.key && keyEvent.key === 'Enter') {
+        		self.addItem(userInput);
+        		// Clear out the text box
+				keyEvent.target.value = '';
+			}
+		},
+        addItem(userTodoInput) {
             self.items.push({
                 id: uuid(),
-                name: `Item ${self.items.length}`,
-                status: `new`
+                name: userTodoInput,
+                status: `new`,
+				tags: self.extractTagsFromUserInput(userTodoInput)
             });
         },
+		extractTagsFromUserInput(userTodoInput) {
+			return userTodoInput.match(/(?<=#)\S+/g);
+		},
         setItemName(id, name) {
             const item = self.items.find(i => i.id === id);
             item.name = name;
