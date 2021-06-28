@@ -7,7 +7,7 @@ function TodoListItem({ className, item, onComplete, onChange, onDelete, onProgr
     return (
         <li className={className}>
             <input onChange={onChange} value={item.name} />
-			<button onClick={onProgressUpdate}>Start</button>
+			<button onClick={onProgressUpdate}>{item.status === 'new' ? 'Start' : 'Incomplete'}</button>
 			{item.status === 'started' &&
 				<button onClick={onComplete}>Complete?</button>
 			}
