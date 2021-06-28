@@ -17,12 +17,13 @@ function TodoList({ className }) {
             </header>
             <section>
                 <ul>
-                    {store.activeItems.map(item => (
+                    {store.workingItems.map(item => (
                         <TodoListItem
                             key={item.id}
-                            name={item.name}
+                            item={item}
                             isComplete={item.isComplete}
                             onComplete={() => store.setCompleted(item.id)}
+							onProgressUpdate={() => store.setTaskStatus(item.id, 'started')}
                             onChange={(e) => store.setItemName(item.id, e.target.value)}
                             onDelete={() => store.deleteItem(item.id)}
                         />
@@ -51,20 +52,22 @@ function createTodoStore() {
         items: [{
             id: uuid(),
             name: "Sample item",
-            isComplete: false,
+			status: 'new'
         }],
 
-        get activeItems() {
-            return self.items.filter(i => !i.isComplete);
+        get workingItems() {
+            return self.items.filter(i =>  i.status !== 'completed');
         },
         get completedItems() {
-            return self.items.filter(i => i.isComplete);
+        	// TODO move started (or status) to constant
+            return self.items.filter(i => i.status === 'completed');
         },
 
         addItem() {
             self.items.push({
                 id: uuid(),
                 name: `Item ${self.items.length}`,
+                status: `new`
             });
         },
         setItemName(id, name) {
@@ -73,8 +76,18 @@ function createTodoStore() {
         },
         setCompleted(id) {
             const item = self.items.find(i => i.id === id);
-            item.isComplete = true;
+            item.status = 'completed';
         },
+		setTaskStatus(id) {
+			const item = self.items.find(i => i.id === id);
+
+			// TODO: Fix state toggling, this is crude
+			if (item.status === 'new') {
+				item.status = 'started';
+			} else if (item.status === 'started') {
+				item.status = 'new';
+			}
+		},
 		deleteItem(id) {
         	const itemIndex = self.items.findIndex(i => i.id === id);
         	self.items.splice(itemIndex,1);

@@ -3,11 +3,14 @@ import { observer } from 'mobx-react'
 import styled from 'styled-components'
 
 
-function TodoListItem({ className, name, onComplete, onChange, onDelete }) {
+function TodoListItem({ className, item, onComplete, onChange, onDelete, onProgressUpdate }) {
     return (
         <li className={className}>
-            <button onClick={onComplete}>Done?</button>
-            <input onChange={onChange} value={name} />
+            <input onChange={onChange} value={item.name} />
+			<button onClick={onProgressUpdate}>Start</button>
+			{item.status === 'started' &&
+				<button onClick={onComplete}>Complete?</button>
+			}
 			<button onClick={onDelete}>Delete?</button>
         </li>
     )
