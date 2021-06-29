@@ -20,7 +20,7 @@ function TodoList({ className }) {
 			</section>
             <section>
                 <ul>
-                    {store.workingItems.map(item => (
+                    {store.nonCompletedFilteredItems.map(item => (
                         <TodoListItem
                             key={item.id}
                             item={item}
@@ -28,13 +28,17 @@ function TodoList({ className }) {
                             onComplete={() => store.setCompleted(item.id)}
 							onProgressUpdate={() => store.setTaskStatus(item.id, 'started')}
                             onDelete={() => store.deleteItem(item.id)}
+							onEdit={(value) => store.editItem(item.id, value)}
                         />
                     ))}
                 </ul>
-                <button onClick={store.addItem}>
-                    Add New Item
-                </button>
             </section>
+			<section>
+				<h2 className="completedTitle">Filter By Tag(s)</h2>
+				{store.allTags.map(tag => (
+					<button>{tag}</button>
+				))}
+			</section>
             <footer>
                 <h2 className="completedTitle">Completed Items</h2>
                 <ul>
@@ -51,6 +55,7 @@ function TodoList({ className }) {
 
 function createTodoStore() {
     const self = observable({
+		allTags: ["Clean-Up", "Styling", "Admin", "Component"],
         items: [{
             id: uuid(),
             name: "Complete CSS for TODOList application",
@@ -81,7 +86,7 @@ function createTodoStore() {
 			tags: ["Component"]
 		}],
 
-        get workingItems() {
+        get nonCompletedFilteredItems() {
             return self.items.filter(i =>  i.status !== 'completed');
         },
         get completedItems() {
@@ -101,11 +106,33 @@ function createTodoStore() {
                 id: uuid(),
                 name: userTodoInput,
                 status: `new`,
-				tags: self.extractTagsFromUserInput(userTodoInput)
+				tags: self.extractTags(userTodoInput)
             });
+
+            self.updateTags()
         },
-		extractTagsFromUserInput(userTodoInput) {
+		updateTags() {
+			// Reset our array store, and crawl our store again.
+			// TODO : Would be a good place to add / remove items that have been updated
+			self.allTags = [];
+
+			self.items.forEach(item => {
+				if (item.tags) {
+					self.allTags.push(item.tags)
+				}
+			});
+			// Flatten the array and create a new set with the data (this will force uniqueness)
+			self.allTags = [...new Set(self.allTags.flat(1))];
+		},
+		extractTags(userTodoInput) {
 			return userTodoInput.match(/(?<=#)\S+/g);
+		},
+		editItem(id, value) {
+			const item = self.items.find(i => i.id === id);
+			item.name = value;
+			item.tags = self.extractTags(value);
+
+			self.updateTags();
 		},
         setItemName(id, name) {
             const item = self.items.find(i => i.id === id);
@@ -128,6 +155,8 @@ function createTodoStore() {
 		deleteItem(id) {
         	const itemIndex = self.items.findIndex(i => i.id === id);
         	self.items.splice(itemIndex,1);
+
+			self.updateTags();
 		},
     })
 
