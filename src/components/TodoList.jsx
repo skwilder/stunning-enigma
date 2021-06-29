@@ -20,7 +20,7 @@ function TodoList({ className }) {
 			</section>
             <section>
                 <ul>
-                    {store.nonCompletedFilteredItems.map(item => (
+                    {store.nonCompletedItems.map(item => (
                         <TodoListItem
                             key={item.id}
                             item={item}
@@ -33,13 +33,11 @@ function TodoList({ className }) {
                     ))}
                 </ul>
             </section>
-			<section>
+            <footer>
 				<h2 className="completedTitle">Filter By Tag(s)</h2>
 				{store.allTags.map(tag => (
-					<button>{tag}</button>
+					<button onClick={() => store.changeFilter(tag)}>{tag}</button>
 				))}
-			</section>
-            <footer>
                 <h2 className="completedTitle">Completed Items</h2>
                 <ul>
                     {store.completedItems.map(item => (
@@ -56,6 +54,7 @@ function TodoList({ className }) {
 function createTodoStore() {
     const self = observable({
 		allTags: ["Clean-Up", "Styling", "Admin", "Component"],
+		filter: '',
         items: [{
             id: uuid(),
             name: "Complete CSS for TODOList application",
@@ -86,14 +85,30 @@ function createTodoStore() {
 			tags: ["Component"]
 		}],
 
-        get nonCompletedFilteredItems() {
-            return self.items.filter(i =>  i.status !== 'completed');
+        get nonCompletedItems() {
+            return self.applyFilterToItems(self.items.filter(i =>  i.status !== 'completed'));
         },
         get completedItems() {
         	// TODO move started (or status) to constant
-            return self.items.filter(i => i.status === 'completed');
+            return self.applyFilterToItems(self.items.filter(i => i.status === 'completed'));
         },
 
+		applyFilterToItems(items) {
+			if (self.filter) {
+				items = items.filter(i => i.tags && i.tags.indexOf(self.filter) !== -1);
+			}
+
+			return items;
+		},
+		changeFilter(filter) {
+			// Check the current filter, if the same one is clicked it's considered a reset
+			// TODO Add a reset filter button for a better use case
+			if (filter === self.filter) {
+				self.filter = '';
+			} else {
+				self.filter = filter;
+			}
+		},
 		processCreationInput(userInput, keyEvent) {
         	if (keyEvent.key && keyEvent.key === 'Enter') {
         		self.addItem(userInput);
