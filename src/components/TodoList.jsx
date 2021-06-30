@@ -5,7 +5,7 @@ import { observable } from 'mobx';
 import { v4 as uuid} from 'uuid';
 
 import TodoListItem from './TodoListItem'
-
+import TodoListLogger from './TodoListLogger'
 
 function TodoList({ className }) {
     const [ store ] = useState(createTodoStore);
@@ -46,6 +46,14 @@ function TodoList({ className }) {
                         </li>
                     ))}
                 </ul>
+				<h2 className="completedTitle">Item(s) History</h2>
+				<ul>
+					{store.logger.map(logger => (
+						<TodoListLogger
+							logger={logger}
+						/>
+					))}
+				</ul>
             </footer>
         </div>
     )
@@ -55,6 +63,7 @@ function createTodoStore() {
     const self = observable({
 		allTags: ["Clean-Up", "Styling", "Admin", "Component"],
 		filter: '',
+		logger: [],
         items: [{
             id: uuid(),
             name: "Complete CSS for TODOList application",
@@ -111,24 +120,32 @@ function createTodoStore() {
 		},
 		processCreationInput(userInput, keyEvent) {
         	if (keyEvent.key && keyEvent.key === 'Enter') {
-        		self.addItem(userInput);
+        		const newItem = self.addItem(userInput);
         		// Clear out the text box
 				keyEvent.target.value = '';
+
+				self.addLoggerItem('ITEM_ADDED', {item: newItem});
 			}
 		},
+		addLoggerItem(type, data) {
+			self.logger.push({type: type, data: data});
+		},
         addItem(userTodoInput) {
-            self.items.push({
-                id: uuid(),
-                name: userTodoInput,
-                status: `new`,
+			const newItem = {
+				id: uuid(),
+				name: userTodoInput,
+				status: `new`,
 				tags: self.extractTags(userTodoInput)
-            });
+			};
 
-            self.updateTags()
+            self.items.push(newItem);
+            self.updateTagStore()
+
+			return newItem;
         },
-		updateTags() {
+		updateTagStore() {
 			// Reset our array store, and crawl our store again.
-			// TODO : Would be a good place to add / remove items that have been updated
+			// TODO : Instead of resetting the whole array, look at a better solution to only act on changes
 			self.allTags = [];
 
 			self.items.forEach(item => {
@@ -147,15 +164,13 @@ function createTodoStore() {
 			item.name = value;
 			item.tags = self.extractTags(value);
 
-			self.updateTags();
+			self.addLoggerItem('ITEM_UPDATED', {item: item});
+			self.updateTagStore();
 		},
-        setItemName(id, name) {
-            const item = self.items.find(i => i.id === id);
-            item.name = name;
-        },
         setCompleted(id) {
             const item = self.items.find(i => i.id === id);
             item.status = 'completed';
+			self.addLoggerItem('STATUS_UPDATE', {item: item});
         },
 		setTaskStatus(id) {
 			const item = self.items.find(i => i.id === id);
@@ -163,15 +178,18 @@ function createTodoStore() {
 			// TODO: Fix state toggling, this is crude
 			if (item.status === 'new') {
 				item.status = 'started';
+				self.addLoggerItem('STATUS_UPDATE', {item: item, status: 'started'});
 			} else if (item.status === 'started') {
 				item.status = 'new';
+				self.addLoggerItem('STATUS_UPDATE', {item: item, status: 'new'});
 			}
 		},
 		deleteItem(id) {
         	const itemIndex = self.items.findIndex(i => i.id === id);
-        	self.items.splice(itemIndex,1);
 
-			self.updateTags();
+			self.addLoggerItem('ITEM_REMOVED', {item: self.items.find(i => i.id === id)});
+        	self.items.splice(itemIndex,1);
+			self.updateTagStore();
 		},
     })
 
