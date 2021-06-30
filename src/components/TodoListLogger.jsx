@@ -27,9 +27,9 @@ function createTodoStore() {
 				case 'STATUS_UPDATE':
 					return logger.data.item.name + ' Status Updated: ' + logger.data.status
 				case 'TAG_ADDED':
-					return 'Tag Added: ' + logger.data.item.name
+					return 'Tag Added: ' + logger.data.tag
 				case 'TAG_REMOVED':
-					return 'Tag Removed: ' + logger.data.item.name
+					return 'Tag Removed: ' + logger.data.tag
 				default:
 					return 'Default'
 			}

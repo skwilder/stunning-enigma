@@ -79,9 +79,9 @@ function createTodoStore() {
 			tags: ["Clean-Up", "Styling"]
 		},{
 			id: uuid(),
-			name: "Ensure git commits are accurate! #Clean-up",
+			name: "Ensure git commits are accurate! #Clean-Up",
 			status: 'started',
-			tags: ["Clean-up"]
+			tags: ["Clean-Up"]
 		},{
 			id: uuid(),
 			name: "Download and install application #Admin",
@@ -95,20 +95,13 @@ function createTodoStore() {
 		}],
 
         get nonCompletedItems() {
-            return self.applyFilterToItems(self.items.filter(i =>  i.status !== 'completed'));
+            return self.applyFilterToItems(self.items.filter(i => i.status !== 'completed'));
         },
         get completedItems() {
         	// TODO move started (or status) to constant
             return self.applyFilterToItems(self.items.filter(i => i.status === 'completed'));
         },
 
-		applyFilterToItems(items) {
-			if (self.filter) {
-				items = items.filter(i => i.tags && i.tags.indexOf(self.filter) !== -1);
-			}
-
-			return items;
-		},
 		changeFilter(filter) {
 			// Check the current filter, if the same one is clicked it's considered a reset
 			// TODO Add a reset filter button for a better use case
@@ -127,9 +120,6 @@ function createTodoStore() {
 				self.addLoggerItem('ITEM_ADDED', {item: newItem});
 			}
 		},
-		addLoggerItem(type, data) {
-			self.logger.push({type: type, data: data});
-		},
         addItem(userTodoInput) {
 			const newItem = {
 				id: uuid(),
@@ -143,22 +133,6 @@ function createTodoStore() {
 
 			return newItem;
         },
-		updateTagStore() {
-			// Reset our array store, and crawl our store again.
-			// TODO : Instead of resetting the whole array, look at a better solution to only act on changes
-			self.allTags = [];
-
-			self.items.forEach(item => {
-				if (item.tags) {
-					self.allTags.push(item.tags)
-				}
-			});
-			// Flatten the array and create a new set with the data (this will force uniqueness)
-			self.allTags = [...new Set(self.allTags.flat(1))];
-		},
-		extractTags(userTodoInput) {
-			return userTodoInput.match(/(?<=#)\S+/g);
-		},
 		editItem(id, value) {
 			const item = self.items.find(i => i.id === id);
 			item.name = value;
@@ -186,10 +160,57 @@ function createTodoStore() {
 		},
 		deleteItem(id) {
         	const itemIndex = self.items.findIndex(i => i.id === id);
+        	const deletedItem = self.items.find(i => i.id === id);
 
-			self.addLoggerItem('ITEM_REMOVED', {item: self.items.find(i => i.id === id)});
+			self.addLoggerItem('ITEM_REMOVED', {item: deletedItem});
         	self.items.splice(itemIndex,1);
 			self.updateTagStore();
+		},
+
+		/* Helper functions rather then store functions.  Not sure if they go here or somewhere else. */
+
+		// updateTagStore resets all of our tags in our store, crawls the todo list items, captures the tags and
+		// compares the previous tag array to the new tag array for logging purposes
+		updateTagStore() {
+			// TODO : Instead of resetting the whole array, look at a better solution to only act on changes
+			const previousTags = self.allTags;
+			self.allTags = [];
+
+			self.items.forEach(item => {
+				if (item.tags) {
+					self.allTags.push(item.tags)
+				}
+			});
+
+			// Flatten the array and create a new set with the data (this will force uniqueness)
+			self.allTags = [...new Set(self.allTags.flat(1))];
+
+			// Find any tags that have been removed and then log tem
+			previousTags.filter(function(v) {
+				return self.allTags.indexOf(v) === -1;
+			}).forEach((value) => {
+				self.addLoggerItem('TAG_REMOVED', {tag: value});
+			});
+
+			// Find any tags that have been added and then log tem
+			self.allTags.filter(function(v) {
+				return previousTags.indexOf(v) === -1;
+			}).forEach((value) => {
+				self.addLoggerItem('TAG_ADDED', {tag: value});
+			});
+		},
+		extractTags(userTodoInput) {
+			return userTodoInput.match(/(?<=#)\S+/g);
+		},
+		addLoggerItem(type, data) {
+			self.logger.push({type: type, data: data});
+		},
+		applyFilterToItems(items) {
+			if (self.filter) {
+				items = items.filter(i => i.tags && i.tags.indexOf(self.filter) !== -1);
+			}
+
+			return items;
 		},
     })
 
