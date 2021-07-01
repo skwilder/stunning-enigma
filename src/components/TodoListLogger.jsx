@@ -2,34 +2,35 @@ import React, {useState} from 'react'
 import { observer } from 'mobx-react'
 import styled from 'styled-components'
 import {observable} from "mobx";
+import parse from 'html-react-parser'
 
 function TodoListLogger({ className, logger}) {
 	const [ store ] = useState(createTodoStore);
 
 	return (
 		<li className={className}>
-			{store.getLogValue(logger)}
+			{parse(store.getLogValue(logger))}
 		</li>
 	)
 }
 
 function createTodoStore() {
 	const self = observable({
-		// TODO: Don't like logger.data having different types
+		// TODO: Don't like logger.data having different types of tdata
 		getLogValue(logger) {
 			switch(logger.type) {
 				case 'ITEM_ADDED':
-					return 'Item Added:  ' + logger.data.item.name
+					return '<span>Item Added:  </span>' + logger.data.item.name
 				case 'ITEM_UPDATED':
-					return 'Item Updated: ' + logger.data.item.name
+					return '<span>Item Updated: </span>' + logger.data.item.name
 				case 'ITEM_REMOVED':
-					return 'Item Removed: ' + logger.data.item.name
+					return '<span>Item Removed: </span>' + logger.data.item.name
 				case 'STATUS_UPDATE':
-					return logger.data.item.name + ' Status Updated: ' + logger.data.status
+					return logger.data.item.name + '<span> Status Updated: </span>' + logger.data.status
 				case 'TAG_ADDED':
-					return 'Tag Added: ' + logger.data.tag
+					return '<span>Tag Added: </span>' + logger.data.tag
 				case 'TAG_REMOVED':
-					return 'Tag Removed: ' + logger.data.tag
+					return '<span>Tag Removed: </span>' + logger.data.tag
 				default:
 					return 'Default'
 			}
@@ -40,9 +41,8 @@ function createTodoStore() {
 }
 
 export default styled(observer(TodoListLogger))`
-    color: red;
-
-    input {
-    	width: 500px
+	font-size: 0.85em;
+	span {
+		font-weight: bold;
 	}
 `

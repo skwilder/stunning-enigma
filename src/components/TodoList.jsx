@@ -15,29 +15,34 @@ function TodoList({ className }) {
             <header>
                 <h1 className="title">TODO List Example</h1>
             </header>
-			<section>
-				<input onKeyUp={(e) => store.processCreationInput(e.target.value, e)}/>
-			</section>
             <section>
-                <ul>
-                    {store.nonCompletedItems.map(item => (
-                        <TodoListItem
-                            key={item.id}
-                            item={item}
-                            isComplete={item.isComplete}
-                            onComplete={() => store.setCompleted(item.id)}
-							onProgressUpdate={() => store.setTaskStatus(item.id, 'started')}
-                            onDelete={() => store.deleteItem(item.id)}
-							onEdit={(value) => store.editItem(item.id, value)}
-                        />
-                    ))}
-                </ul>
+				<input
+					id="addItemsInput"
+					onKeyUp={(e) => store.processCreationInput(e.target.value, e)}
+					placeholder="Type in Todo and hit enter - hashtags create #filters automatically"
+				/>
+				{store.nonCompletedItems.map(item => (
+					<TodoListItem
+						key={item.id}
+						item={item}
+						isComplete={item.isComplete}
+						onComplete={() => store.setCompleted(item.id)}
+						onProgressUpdate={() => store.setTaskStatus(item.id, 'started')}
+						onDelete={() => store.deleteItem(item.id)}
+						onEdit={(value) => store.editItem(item.id, value)}
+					/>
+				))}
             </section>
-            <footer>
+			<section>
 				<h2 className="completedTitle">Filter By Tag(s)</h2>
 				{store.allTags.map(tag => (
-					<button onClick={() => store.changeFilter(tag)}>{tag}</button>
+					<button className={`btn btn-large ${store.filter === tag ? 'activeFilter' : ''}`} onClick={() => store.changeFilter(tag)}>{tag}</button>
 				))}
+				{store.filter &&
+				<button className="btn btn-danger btn-large" onClick={() => store.resetFilter()}>Reset Filter</button>
+				}
+			</section>
+            <footer>
                 <h2 className="completedTitle">Completed Items</h2>
                 <ul>
                     {store.completedItems.map(item => (
@@ -104,12 +109,14 @@ function createTodoStore() {
 
 		changeFilter(filter) {
 			// Check the current filter, if the same one is clicked it's considered a reset
-			// TODO Add a reset filter button for a better use case
 			if (filter === self.filter) {
-				self.filter = '';
+				self.resetFilter();
 			} else {
 				self.filter = filter;
 			}
+		},
+		resetFilter() {
+			self.filter = '';
 		},
 		processCreationInput(userInput, keyEvent) {
         	if (keyEvent.key && keyEvent.key === 'Enter') {
@@ -218,9 +225,51 @@ function createTodoStore() {
 }
 
 export default styled(observer(TodoList))`
-    background-color: lightgray;
+  	margin: auto;
+	width: 80%;
+  	font-family: 'Roboto', sans-serif;
+	background-color: rgb(245, 249, 250);
+	padding: 20px;
 
-    .title {
-        color: orange;
+    h2, h1 {
+    	background-color: rgb(219, 249, 255);
+    	color: rgb(0, 114, 158);
+    	text-align: center;
+    	padding: 5px;
     }
+    #addItemsInput {
+    	width: 100%;
+    	height: 50px;
+    	margin: 10px 0;
+    	font-size: 1.25em;
+		box-sizing: border-box;
+		padding-left: 15px;
+		border: 2px solid rgb(0, 114, 158);
+    }
+	.btn {
+		width: 100%;
+		border-radius: 5px;
+		border: none;
+		margin: 5px;
+		cursor:pointer;
+	}
+	.btn-large {
+		padding: 5px;
+	}
+	.btn-primary {
+		background-color: rgb(0, 114, 158);
+		color: white;
+	}
+	.btn-success {
+		background-color: #198754;
+		color: white;
+	}
+	.btn-danger {
+		background-color: #c9302c;
+		color: white;
+	}
+	.activeFilter {
+		background-color: rgb(25, 135, 84);
+		color: white;
+	}
 `
